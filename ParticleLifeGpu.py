@@ -5,6 +5,7 @@ import torch
 from torch import tensor, float32, Tensor
 import math
 import time
+import threading
 
 k_maxCreatures = 1
 
@@ -32,11 +33,13 @@ elif torch.cuda.is_available():
 else:
     print("running on cpu")
     
+# device = torch.device("cpu")
+    
 lifeFormList = []
 
-# class Particle(pygame.sprite.Sprite):
-#     def __init__(self) -> None:
-#         super().__init__()
+class Particle(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        super().__init__()
 
 class ParticleLife():
     
@@ -50,37 +53,37 @@ class ParticleLife():
         currentParticleDif = tot - (math.floor(redRatio * size) + math.floor(blueRatio * size) + math.floor(greenRatio * size) + math.floor(yellowRatio * size))
         
         # create tensors for x and y values for each color
-        self.xTensorsRed = tensor([random.randint(0, width) for x in range(math.floor(redRatio * size))], dtype=int, device=device)
-        self.xTensorsBlue = tensor([random.randint(0, width) for x in range(math.floor(blueRatio * size))], dtype=int, device=device)
-        self.xTensorsGreen = tensor([random.randint(0, width) for x in range(math.floor(greenRatio * size))], dtype=int, device=device)
-        self.xTensorsYellow = tensor([random.randint(0, width) for x in range(math.floor(yellowRatio * size))], dtype=int, device=device)
-        self.yTensorsRed = tensor([random.randint(0, height) for x in range(math.floor(redRatio * size))], dtype=int, device=device)
-        self.yTensorsBlue = tensor([random.randint(0, height) for x in range(math.floor(blueRatio * size))], dtype=int, device=device)
-        self.yTensorsGreen = tensor([random.randint(0, height) for x in range(math.floor(greenRatio * size))], dtype=int, device=device)
-        self.yTensorsYellow = tensor([random.randint(0, height) for x in range(math.floor(yellowRatio * size))], dtype=int, device=device)
-        
+        self.xTensorsRed = tensor([random.randint(0, width) for x in range(math.floor(redRatio * size))], dtype=int, device="cpu")
+        self.xTensorsBlue = tensor([random.randint(0, width) for x in range(math.floor(blueRatio * size))], dtype=int, device="cpu")
+        self.xTensorsGreen = tensor([random.randint(0, width) for x in range(math.floor(greenRatio * size))], dtype=int, device="cpu")
+        self.xTensorsYellow = tensor([random.randint(0, width) for x in range(math.floor(yellowRatio * size))], dtype=int, device="cpu")
+        self.yTensorsRed = tensor([random.randint(0, height) for x in range(math.floor(redRatio * size))], dtype=int, device="cpu")
+        self.yTensorsBlue = tensor([random.randint(0, height) for x in range(math.floor(blueRatio * size))], dtype=int, device="cpu")
+        self.yTensorsGreen = tensor([random.randint(0, height) for x in range(math.floor(greenRatio * size))], dtype=int, device="cpu")
+        self.yTensorsYellow = tensor([random.randint(0, height) for x in range(math.floor(yellowRatio * size))], dtype=int, device="cpu")
+                
         # make sure total particle num equals the total particles
         counter = 0
         for num in range(currentParticleDif):
             if counter == 0:
-                self.xTensorsRed = torch.cat((self.xTensorsRed, tensor([random.randint(0, width)], dtype=int, device=device)))
-                self.yTensorsRed = torch.cat((self.yTensorsRed, tensor([random.randint(0, height)], dtype=int, device=device)))
+                self.xTensorsRed = torch.cat((self.xTensorsRed, tensor([random.randint(0, width)], dtype=int, device="cpu")))
+                self.yTensorsRed = torch.cat((self.yTensorsRed, tensor([random.randint(0, height)], dtype=int, device="cpu")))
             elif counter == 1:
-                self.xTensorsBlue = torch.cat((self.xTensorsBlue, tensor([random.randint(0, width)], dtype=int, device=device)))
-                self.yTensorsBlue = torch.cat((self.yTensorsBlue, tensor([random.randint(0, height)], dtype=int, device=device)))
+                self.xTensorsBlue = torch.cat((self.xTensorsBlue, tensor([random.randint(0, width)], dtype=int, device="cpu")))
+                self.yTensorsBlue = torch.cat((self.yTensorsBlue, tensor([random.randint(0, height)], dtype=int, device="cpu")))
             else:
-                self.xTensorsGreen = torch.cat((self.xTensorsGreen, tensor([random.randint(0, width)], dtype=int, device=device)))
-                self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int, device=device)))
+                self.xTensorsGreen = torch.cat((self.xTensorsGreen, tensor([random.randint(0, width)], dtype=int, device="cpu")))
+                self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int, device="cpu")))
         
         # create vx and vy tensors for each color
-        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float32, device=device)
-        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float32, device=device)
-        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float32, device=device)
-        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float32, device=device)
-        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float32, device=device)
-        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float32, device=device)
-        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float32, device=device)
-        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float32, device=device)
+        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float32, device="cpu")
+        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float32, device="cpu")
+        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float32, device="cpu")
+        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float32, device="cpu")
+        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float32, device="cpu")
+        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float32, device="cpu")
+        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float32, device="cpu")
+        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float32, device="cpu")
         
         # rules
         self.RedRed = random.randint(-100, 100)/100
@@ -100,20 +103,24 @@ class ParticleLife():
         self.YellowGreen = random.randint(-100, 100)/100
         self.YellowYellow = random.randint(-100, 100)/100
         
-        # sprite groups for use in drawing
-        # self.redGroup = pygame.sprite.Group()
-        # self.blueGroup = pygame.sprite.Group()
-        # self.greenGroup = pygame.sprite.Group()
-        # self.yellowGroup = pygame.sprite.Group()
+        # create numpy arrays from position tensors if running on cpu
+        self.xArrayRed = self.xTensorsRed.numpy()
+        self.xArrayBlue = self.xTensorsBlue.numpy()
+        self.xArrayGreen = self.xTensorsGreen.numpy()
+        self.xArrayYellow = self.xTensorsYellow.numpy()
+        self.yArrayRed = self.yTensorsRed.numpy()
+        self.yArrayBlue = self.yTensorsBlue.numpy()
+        self.yArrayGreen = self.yTensorsGreen.numpy()
+        self.yArrayYellow = self.yTensorsYellow.numpy()
         
     def calculateForces(self, xTensor1: Tensor, yTensor1: Tensor, vxTensor1: Tensor, vyTensor1: Tensor, xTensor2: Tensor, yTensor2: Tensor, rule: int):
         # create new tensors for x and y tensors
-        xTensors1 = xTensor1.repeat(xTensor2.size(dim=0),)
-        yTensors1 = yTensor1.repeat(yTensor2.size(dim=0),)
+        xTensors1 = xTensor1.repeat(xTensor2.size(dim=0),).to(device)
+        yTensors1 = yTensor1.repeat(yTensor2.size(dim=0),).to(device)
         
         # create new tensors for x2 and y2 tensors
-        xTensors2 = xTensor2.repeat_interleave(xTensor1.size(dim=0))
-        yTensors2 = yTensor2.repeat_interleave(yTensor1.size(dim=0))
+        xTensors2 = xTensor2.repeat_interleave(xTensor1.size(dim=0)).to(device)
+        yTensors2 = yTensor2.repeat_interleave(yTensor1.size(dim=0)).to(device)
         
         # create tensors for fx and fy of particles
         fxTensor = torch.zeros((xTensors1.size(dim=0),), device=device)
@@ -136,8 +143,8 @@ class ParticleLife():
         fyTensor = torch.sum(fyTensor, 0)
         
         # forces to velocity
-        vxTensor1 = (vxTensor1 + fxTensor)*0.5
-        vyTensor1 = (vyTensor1 + fyTensor)*0.5
+        vxTensor1 = ((vxTensor1.to(device) + fxTensor)*0.5).to("cpu")
+        vyTensor1 = ((vyTensor1.to(device) + fyTensor)*0.5).to("cpu")
         
         # velocity to postion
         xTensor1.add_(vxTensor1.long())
@@ -152,16 +159,18 @@ class ParticleLife():
         vyTensor1.multiply_(torch.where(yTensor1 == height, -1.0, 1.0))
         vxTensor1.multiply_(torch.where(xTensor1 == 0, -1.0, 1.0))
         vyTensor1.multiply_(torch.where(yTensor1 == 0, -1.0, 1.0))
-        
+                
     def draw(self):
-        for i in range(self.xTensorsRed.size(dim=0)):
-            pygame.draw.rect(screen, red, (self.xTensorsRed[i] - 1, self.yTensorsRed[i] - 1, 3, 3))
+        # if running on cpu, use numpy arrays created prior, otherwise create new numpy arrays and iterate over them to draw particles
+        # this is due to iterating over tensors taking longer than iterating over numpy arrays
+        for i in range(len(self.xArrayRed)):
+            pygame.draw.rect(screen, red, (self.xArrayRed[i] - 1, self.yArrayRed[i] - 1, 3, 3))
         for i in range(self.xTensorsBlue.size(dim=0)):
-            pygame.draw.rect(screen, blue, (self.xTensorsBlue[i] - 1, self.yTensorsBlue[i] - 1, 3, 3))
+            pygame.draw.rect(screen, blue, (self.xArrayBlue[i] - 1, self.yArrayBlue[i] - 1, 3, 3))
         for i in range(self.xTensorsGreen.size(dim=0)):
-            pygame.draw.rect(screen, green, (self.xTensorsGreen[i] - 1, self.yTensorsGreen[i] - 1, 3, 3))
+            pygame.draw.rect(screen, green, (self.xArrayGreen[i] - 1, self.yArrayGreen[i] - 1, 3, 3))
         for i in range(self.xTensorsYellow.size(dim=0)):
-            pygame.draw.rect(screen, yellow, (self.xTensorsYellow[i] - 1, self.yTensorsYellow[i] - 1, 3, 3))
+            pygame.draw.rect(screen, yellow, (self.xArrayYellow[i] - 1, self.yArrayYellow[i] - 1, 3, 3))
         
     def update(self):
         start = time.time()
@@ -192,7 +201,7 @@ class ParticleLife():
 
 def main():
     running = True
-    particleLife = ParticleLife(512, [1, 1, 1, 1])
+    particleLife = ParticleLife(8192, [1, 1, 1, 1])
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -202,7 +211,7 @@ def main():
         particleLife.update()
 
         pygame.display.update()
-        clock.tick(120)
+        clock.tick(60)
     pygame.quit()
         
 if __name__ == "__main__":
