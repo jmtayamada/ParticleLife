@@ -52,27 +52,27 @@ class ParticleLife():
         currentParticleDif = tot - (math.floor(redRatio * size) + math.floor(blueRatio * size) + math.floor(greenRatio * size) + math.floor(yellowRatio * size))
         
         # create tensors for x and y values for each color on cpu
-        self.xTensorsRed = tensor([random.randint(0, width) for x in range(math.floor(redRatio * size))], dtype=int, device="cpu")
-        self.xTensorsBlue = tensor([random.randint(0, width) for x in range(math.floor(blueRatio * size))], dtype=int, device="cpu")
-        self.xTensorsGreen = tensor([random.randint(0, width) for x in range(math.floor(greenRatio * size))], dtype=int, device="cpu")
-        self.xTensorsYellow = tensor([random.randint(0, width) for x in range(math.floor(yellowRatio * size))], dtype=int, device="cpu")
-        self.yTensorsRed = tensor([random.randint(0, height) for x in range(math.floor(redRatio * size))], dtype=int, device="cpu")
-        self.yTensorsBlue = tensor([random.randint(0, height) for x in range(math.floor(blueRatio * size))], dtype=int, device="cpu")
-        self.yTensorsGreen = tensor([random.randint(0, height) for x in range(math.floor(greenRatio * size))], dtype=int, device="cpu")
-        self.yTensorsYellow = tensor([random.randint(0, height) for x in range(math.floor(yellowRatio * size))], dtype=int, device="cpu")
+        self.xTensorsRed = tensor([random.randint(0, width) for x in range(math.floor(redRatio * size))], dtype=int)
+        self.xTensorsBlue = tensor([random.randint(0, width) for x in range(math.floor(blueRatio * size))], dtype=int)
+        self.xTensorsGreen = tensor([random.randint(0, width) for x in range(math.floor(greenRatio * size))], dtype=int)
+        self.xTensorsYellow = tensor([random.randint(0, width) for x in range(math.floor(yellowRatio * size))], dtype=int)
+        self.yTensorsRed = tensor([random.randint(0, height) for x in range(math.floor(redRatio * size))], dtype=int)
+        self.yTensorsBlue = tensor([random.randint(0, height) for x in range(math.floor(blueRatio * size))], dtype=int)
+        self.yTensorsGreen = tensor([random.randint(0, height) for x in range(math.floor(greenRatio * size))], dtype=int)
+        self.yTensorsYellow = tensor([random.randint(0, height) for x in range(math.floor(yellowRatio * size))], dtype=int)
                 
         # make sure total particle num equals the total particles
         counter = 0
         for num in range(currentParticleDif):
             if counter == 0:
-                self.xTensorsRed = torch.cat((self.xTensorsRed, tensor([random.randint(0, width)], dtype=int, device="cpu")))
-                self.yTensorsRed = torch.cat((self.yTensorsRed, tensor([random.randint(0, height)], dtype=int, device="cpu")))
+                self.xTensorsRed = torch.cat((self.xTensorsRed, tensor([random.randint(0, width)], dtype=int)))
+                self.yTensorsRed = torch.cat((self.yTensorsRed, tensor([random.randint(0, height)], dtype=int)))
             elif counter == 1:
-                self.xTensorsBlue = torch.cat((self.xTensorsBlue, tensor([random.randint(0, width)], dtype=int, device="cpu")))
-                self.yTensorsBlue = torch.cat((self.yTensorsBlue, tensor([random.randint(0, height)], dtype=int, device="cpu")))
+                self.xTensorsBlue = torch.cat((self.xTensorsBlue, tensor([random.randint(0, width)], dtype=int)))
+                self.yTensorsBlue = torch.cat((self.yTensorsBlue, tensor([random.randint(0, height)], dtype=int)))
             else:
-                self.xTensorsGreen = torch.cat((self.xTensorsGreen, tensor([random.randint(0, width)], dtype=int, device="cpu")))
-                self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int, device="cpu")))
+                self.xTensorsGreen = torch.cat((self.xTensorsGreen, tensor([random.randint(0, width)], dtype=int)))
+                self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int)))
                 
         self.xGpuTensorsRed = self.xTensorsRed.to(device)
         self.xGpuTensorsBlue = self.xTensorsBlue.to(device)
