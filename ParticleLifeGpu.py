@@ -2,10 +2,9 @@ import pygame
 from pygame.locals import *
 import random
 import torch
-from torch import tensor, float32, Tensor
+from torch import tensor, float16, Tensor
 import math
 import time
-import threading
 
 # variable for use in second version of this project
 k_maxCreatures = 1
@@ -76,14 +75,14 @@ class ParticleLife():
                 self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int, device="cpu")))
         
         # create vx and vy tensors for each color on cpu
-        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float32, device="cpu")
-        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float32, device="cpu")
-        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float32, device="cpu")
-        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float32, device="cpu")
-        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float32, device="cpu")
-        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float32, device="cpu")
-        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float32, device="cpu")
-        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float32, device="cpu")
+        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float16, device="cpu")
+        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float16, device="cpu")
+        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float16, device="cpu")
+        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float16, device="cpu")
+        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float16, device="cpu")
+        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float16, device="cpu")
+        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float16, device="cpu")
+        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float16, device="cpu")
         
         # rules
         self.RedRed = random.randint(-100, 100)/100
@@ -132,7 +131,7 @@ class ParticleLife():
         dis = (dx**2 + dy**2)**.5
         
         # calculate forces
-        F = tensor(torch.reciprocal((dis + .0000000001)) * rule, dtype=float32, device=device)
+        F = tensor(torch.reciprocal((dis + .0000000001)) * rule, dtype=float16, device=device)
         fxTensor += F*dx
         fyTensor += F*dy
                 
@@ -172,7 +171,6 @@ class ParticleLife():
         
     # main loop for a particle sim
     def update(self):
-        # start = time.time()
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsRed, self.yTensorsRed, self.RedRed)
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsBlue, self.yTensorsBlue, self.RedBlue)
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsGreen, self.yTensorsGreen, self.RedGreen)
@@ -189,18 +187,16 @@ class ParticleLife():
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsBlue, self.yTensorsBlue, self.YellowBlue)
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsGreen, self.yTensorsGreen, self.YellowGreen)
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsYellow, self.yTensorsYellow, self.YellowYellow)
-        # end = time.time()
-        # print("calculation time: " + str(end-start))
-        # start = time.time()
+
         self.draw()
-        # end = time.time()
-        # print("drawing time: " + str(end-start))
 
 
 def main():
     running = True
     particleLife = ParticleLife(2048, [1, 1, 1, 1])
+    timeList = []
     while running:
+        start = time.time()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -209,7 +205,10 @@ def main():
         particleLife.update()
 
         pygame.display.update()
+        end = time.time()
+        timeList.append(end-start)
         clock.tick(60)
+    print("average time: " + str(sum(timeList)/len(timeList)))
     pygame.quit()
         
 if __name__ == "__main__":
