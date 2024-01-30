@@ -160,7 +160,7 @@ class ParticleLife():
         dis = (dx**2 + dy**2)**.5
         
         # calculate forces
-        F = tensor(torch.reciprocal((dis + .0000000001)) * rule, dtype=float16, device=device)
+        F = tensor(torch.reciprocal((dis + .0001)) * rule, dtype=float16, device=device)
         fxTensor += F*dx
         fyTensor += F*dy
                 
