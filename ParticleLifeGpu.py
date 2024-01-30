@@ -73,16 +73,25 @@ class ParticleLife():
             else:
                 self.xTensorsGreen = torch.cat((self.xTensorsGreen, tensor([random.randint(0, width)], dtype=int, device="cpu")))
                 self.yTensorsGreen = torch.cat((self.yTensorsGreen, tensor([random.randint(0, height)], dtype=int, device="cpu")))
+                
+        self.xGpuTensorsRed = self.xTensorsRed.to(device)
+        self.xGpuTensorsBlue = self.xTensorsBlue.to(device)
+        self.xGpuTensorsGreen = self.xTensorsGreen.to(device)
+        self.xGpuTensorsYellow = self.xTensorsYellow.to(device)
+        self.yGpuTensorsRed = self.yTensorsRed.to(device)
+        self.yGpuTensorsBlue = self.yTensorsBlue.to(device)
+        self.yGpuTensorsGreen = self.yTensorsGreen.to(device)
+        self.yGpuTensorsYellow = self.yTensorsYellow.to(device)
         
-        # create vx and vy tensors for each color on cpu
-        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float16, device="cpu")
-        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float16, device="cpu")
-        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float16, device="cpu")
-        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float16, device="cpu")
-        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float16, device="cpu")
-        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float16, device="cpu")
-        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float16, device="cpu")
-        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float16, device="cpu")
+        # create vx and vy tensors for each color on device
+        self.vxTensorsRed = torch.zeros([self.xTensorsRed.size(dim=0),], dtype=float16, device=device)
+        self.vyTensorsRed = torch.zeros([self.yTensorsRed.size(dim=0),], dtype=float16, device=device)
+        self.vxTensorsBlue = torch.zeros([self.xTensorsBlue.size(dim=0),], dtype=float16, device=device)
+        self.vyTensorsBlue = torch.zeros([self.yTensorsBlue.size(dim=0),], dtype=float16, device=device)
+        self.vxTensorsGreen = torch.zeros([self.xTensorsGreen.size(dim=0),], dtype=float16, device=device)
+        self.vyTensorsGreen = torch.zeros([self.yTensorsGreen.size(dim=0),], dtype=float16, device=device)
+        self.vxTensorsYellow = torch.zeros([self.xTensorsYellow.size(dim=0),], dtype=float16, device=device)
+        self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float16, device=device)
         
         # rules
         self.RedRed = random.randint(-100, 100)/100
@@ -112,14 +121,34 @@ class ParticleLife():
         self.yArrayGreen = self.yTensorsGreen.numpy()
         self.yArrayYellow = self.yTensorsYellow.numpy()
         
-    def calculateForces(self, xTensor1: Tensor, yTensor1: Tensor, vxTensor1: Tensor, vyTensor1: Tensor, xTensor2: Tensor, yTensor2: Tensor, rule: int):
-        # create new tensors for x and y tensors and move to device
-        xTensors1 = xTensor1.repeat(xTensor2.size(dim=0),).to(device)
-        yTensors1 = yTensor1.repeat(yTensor2.size(dim=0),).to(device)
+    def syncGpuTensors(self):
+        self.xGpuTensorsRed.copy_(self.xTensorsRed)
+        self.xGpuTensorsBlue.copy_(self.xTensorsBlue)
+        self.xGpuTensorsGreen.copy_(self.xTensorsGreen)
+        self.xGpuTensorsYellow.copy_(self.xTensorsYellow)
+        self.yGpuTensorsRed.copy_(self.yTensorsRed)
+        self.yGpuTensorsBlue.copy_(self.yTensorsBlue)
+        self.yGpuTensorsGreen.copy_(self.yTensorsGreen)
+        self.yGpuTensorsYellow.copy_(self.yTensorsYellow)
         
-        # create new tensors for x2 and y2 tensors and move to device
-        xTensors2 = xTensor2.repeat_interleave(xTensor1.size(dim=0)).to(device)
-        yTensors2 = yTensor2.repeat_interleave(yTensor1.size(dim=0)).to(device)
+    def syncCpuTensors(self):
+        self.xTensorsRed.copy_(self.xGpuTensorsRed)
+        self.xTensorsBlue.copy_(self.xGpuTensorsBlue)
+        self.xTensorsGreen.copy_(self.xGpuTensorsGreen)
+        self.xTensorsYellow.copy_(self.xGpuTensorsYellow)
+        self.yTensorsRed.copy_(self.yGpuTensorsRed)
+        self.yTensorsBlue.copy_(self.yGpuTensorsBlue)
+        self.yTensorsGreen.copy_(self.yGpuTensorsGreen)
+        self.yTensorsYellow.copy_(self.yGpuTensorsYellow)
+        
+    def calculateForces(self, xTensor1: Tensor, yTensor1: Tensor, vxTensor1: Tensor, vyTensor1: Tensor, xTensor2: Tensor, yTensor2: Tensor, rule: int):
+        # create new tensors for x and y tensors
+        xTensors1 = xTensor1.repeat(xTensor2.size(dim=0),)
+        yTensors1 = yTensor1.repeat(yTensor2.size(dim=0),)
+        
+        # create new tensors for x2 and y2 tensors
+        xTensors2 = xTensor2.repeat_interleave(xTensor1.size(dim=0))
+        yTensors2 = yTensor2.repeat_interleave(yTensor1.size(dim=0))
         
         # create tensors for fx and fy of particles
         fxTensor = torch.zeros((xTensors1.size(dim=0),), device=device)
@@ -142,8 +171,8 @@ class ParticleLife():
         fyTensor = torch.sum(fyTensor, 0)
         
         # forces to velocity and make sure to move back to cpu
-        vxTensor1 = ((vxTensor1.to(device) + fxTensor)*0.5).to("cpu")
-        vyTensor1 = ((vyTensor1.to(device) + fyTensor)*0.5).to("cpu")
+        vxTensor1 = ((vxTensor1 + fxTensor)*0.5)
+        vyTensor1 = ((vyTensor1 + fyTensor)*0.5)
         
         # velocity to postion
         xTensor1.add_(vxTensor1.long())
@@ -171,29 +200,33 @@ class ParticleLife():
         
     # main loop for a particle sim
     def update(self):
-        self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsRed, self.yTensorsRed, self.RedRed)
-        self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsBlue, self.yTensorsBlue, self.RedBlue)
-        self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsGreen, self.yTensorsGreen, self.RedGreen)
-        self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsYellow, self.yTensorsYellow, self.RedYellow)
-        self.calculateForces(self.xTensorsBlue, self.yTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xTensorsRed, self.yTensorsRed, self.BlueRed)
-        self.calculateForces(self.xTensorsBlue, self.yTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xTensorsBlue, self.yTensorsBlue, self.BlueBlue)
-        self.calculateForces(self.xTensorsBlue, self.yTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xTensorsGreen, self.yTensorsGreen, self.BlueGreen)
-        self.calculateForces(self.xTensorsBlue, self.yTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xTensorsYellow, self.yTensorsYellow, self.BlueYellow)
-        self.calculateForces(self.xTensorsGreen, self.yTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xTensorsRed, self.yTensorsRed, self.GreenRed)
-        self.calculateForces(self.xTensorsGreen, self.yTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xTensorsBlue, self.yTensorsBlue, self.GreenBlue)
-        self.calculateForces(self.xTensorsGreen, self.yTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xTensorsGreen, self.yTensorsGreen, self.GreenGreen)
-        self.calculateForces(self.xTensorsGreen, self.yTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xTensorsYellow, self.yTensorsYellow, self.GreenYellow)
-        self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsRed, self.yTensorsRed, self.YellowRed)
-        self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsBlue, self.yTensorsBlue, self.YellowBlue)
-        self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsGreen, self.yTensorsGreen, self.YellowGreen)
-        self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsYellow, self.yTensorsYellow, self.YellowYellow)
+        self.syncGpuTensors()
+        
+        self.calculateForces(self.xGpuTensorsRed, self.yGpuTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xGpuTensorsRed, self.yGpuTensorsRed, self.RedRed)
+        self.calculateForces(self.xGpuTensorsRed, self.yGpuTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.RedBlue)
+        self.calculateForces(self.xGpuTensorsRed, self.yGpuTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.RedGreen)
+        self.calculateForces(self.xGpuTensorsRed, self.yGpuTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.RedYellow)
+        self.calculateForces(self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xGpuTensorsRed, self.yGpuTensorsRed, self.BlueRed)
+        self.calculateForces(self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.BlueBlue)
+        self.calculateForces(self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.BlueGreen)
+        self.calculateForces(self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.vxTensorsBlue, self.vyTensorsBlue, self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.BlueYellow)
+        self.calculateForces(self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xGpuTensorsRed, self.yGpuTensorsRed, self.GreenRed)
+        self.calculateForces(self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.GreenBlue)
+        self.calculateForces(self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.GreenGreen)
+        self.calculateForces(self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.vxTensorsGreen, self.vyTensorsGreen, self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.GreenYellow)
+        self.calculateForces(self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xGpuTensorsRed, self.yGpuTensorsRed, self.YellowRed)
+        self.calculateForces(self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xGpuTensorsBlue, self.yGpuTensorsBlue, self.YellowBlue)
+        self.calculateForces(self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xGpuTensorsGreen, self.yGpuTensorsGreen, self.YellowGreen)
+        self.calculateForces(self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xGpuTensorsYellow, self.yGpuTensorsYellow, self.YellowYellow)
+
+        self.syncCpuTensors()
 
         self.draw()
 
 
 def main():
     running = True
-    particleLife = ParticleLife(2048, [1, 1, 1, 1])
+    particleLife = ParticleLife(4096, [1, 1, 1, 1])
     timeList = []
     while running:
         start = time.time()
