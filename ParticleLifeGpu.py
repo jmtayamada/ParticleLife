@@ -1,7 +1,6 @@
 import pygame
 from pygame.locals import *
 import random
-from pygame.sprite import _Group
 import torch
 from torch import tensor, float32, Tensor
 import math
@@ -35,9 +34,9 @@ else:
     
 lifeFormList = []
 
-class Particle(pygame.sprite.Sprite):
-    def __init__(self) -> None:
-        super().__init__()
+# class Particle(pygame.sprite.Sprite):
+#     def __init__(self) -> None:
+#         super().__init__()
 
 class ParticleLife():
     
@@ -102,10 +101,10 @@ class ParticleLife():
         self.YellowYellow = random.randint(-100, 100)/100
         
         # sprite groups for use in drawing
-        self.redGroup = pygame.sprite.Group()
-        self.blueGroup = pygame.sprite.Group()
-        self.greenGroup = pygame.sprite.Group()
-        self.yellowGroup = pygame.sprite.Group()
+        # self.redGroup = pygame.sprite.Group()
+        # self.blueGroup = pygame.sprite.Group()
+        # self.greenGroup = pygame.sprite.Group()
+        # self.yellowGroup = pygame.sprite.Group()
         
     def calculateForces(self, xTensor1: Tensor, yTensor1: Tensor, vxTensor1: Tensor, vyTensor1: Tensor, xTensor2: Tensor, yTensor2: Tensor, rule: int):
         # create new tensors for x and y tensors
@@ -158,13 +157,14 @@ class ParticleLife():
         for i in range(self.xTensorsRed.size(dim=0)):
             pygame.draw.rect(screen, red, (self.xTensorsRed[i] - 1, self.yTensorsRed[i] - 1, 3, 3))
         for i in range(self.xTensorsBlue.size(dim=0)):
-            pygame.draw.rect(screen, blue, (self.xTensorsBlue[i] - 1, self.yTensorsBlue[i].item() - 1, 3, 3))
+            pygame.draw.rect(screen, blue, (self.xTensorsBlue[i] - 1, self.yTensorsBlue[i] - 1, 3, 3))
         for i in range(self.xTensorsGreen.size(dim=0)):
             pygame.draw.rect(screen, green, (self.xTensorsGreen[i] - 1, self.yTensorsGreen[i] - 1, 3, 3))
         for i in range(self.xTensorsYellow.size(dim=0)):
             pygame.draw.rect(screen, yellow, (self.xTensorsYellow[i] - 1, self.yTensorsYellow[i] - 1, 3, 3))
         
     def update(self):
+        start = time.time()
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsRed, self.yTensorsRed, self.RedRed)
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsBlue, self.yTensorsBlue, self.RedBlue)
         self.calculateForces(self.xTensorsRed, self.yTensorsRed, self.vxTensorsRed, self.vyTensorsRed, self.xTensorsGreen, self.yTensorsGreen, self.RedGreen)
@@ -181,8 +181,12 @@ class ParticleLife():
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsBlue, self.yTensorsBlue, self.YellowBlue)
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsGreen, self.yTensorsGreen, self.YellowGreen)
         self.calculateForces(self.xTensorsYellow, self.yTensorsYellow, self.vxTensorsYellow, self.vyTensorsYellow, self.xTensorsYellow, self.yTensorsYellow, self.YellowYellow)
-
+        end = time.time()
+        print("calculation time: " + str(end-start))
+        start = time.time()
         self.draw()
+        end = time.time()
+        print("drawing time: " + str(end-start))
         
 
 
