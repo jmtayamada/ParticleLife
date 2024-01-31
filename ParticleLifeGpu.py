@@ -8,6 +8,7 @@ import time
 
 # variable for use in second version of this project
 k_maxCreatures = 1
+k_particlesPerCreature = 4096
 
 # define colors
 red = (255, 0, 0)
@@ -94,22 +95,22 @@ class ParticleLife():
         self.vyTensorsYellow = torch.zeros([self.yTensorsYellow.size(dim=0),], dtype=float16, device=device)
         
         # rules
-        self.RedRed = random.randint(-100, 100)/100
-        self.RedBlue = random.randint(-100, 100)/100
-        self.RedGreen = random.randint(-100, 100)/100
-        self.RedYellow = random.randint(-100, 100)/100
-        self.BlueRed = random.randint(-100, 100)/100
-        self.BlueBlue = random.randint(-100, 100)/100
-        self.BlueGreen = random.randint(-100, 100)/100
-        self.BlueYellow = random.randint(-100, 100)/100
-        self.GreenRed = random.randint(-100, 100)/100
-        self.GreenBlue = random.randint(-100, 100)/100
-        self.GreenGreen = random.randint(-100, 100)/100
-        self.GreenYellow = random.randint(-100, 100)/100
-        self.YellowRed = random.randint(-100, 100)/100
-        self.YellowBlue = random.randint(-100, 100)/100
-        self.YellowGreen = random.randint(-100, 100)/100
-        self.YellowYellow = random.randint(-100, 100)/100
+        self.RedRed = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.RedBlue = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.RedGreen = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.RedYellow = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.BlueRed = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.BlueBlue = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.BlueGreen = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.BlueYellow = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.GreenRed = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.GreenBlue = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.GreenGreen = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.GreenYellow = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.YellowRed = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.YellowBlue = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.YellowGreen = random.randint(-100, 100)/k_particlesPerCreature*2
+        self.YellowYellow = random.randint(-100, 100)/k_particlesPerCreature*2
         
         # create numpy arrays from position tensors which will make it faster to iterate over the arrays when drawing the particles
         self.xArrayRed = self.xTensorsRed.numpy()
@@ -171,8 +172,8 @@ class ParticleLife():
         fyTensor = torch.sum(fyTensor, 0)
         
         # forces to velocity and make sure to move back to cpu
-        vxTensor1 = ((vxTensor1 + fxTensor)*0.5)
-        vyTensor1 = ((vyTensor1 + fyTensor)*0.5)
+        vxTensor1.copy_((vxTensor1 + fxTensor)*0.5)
+        vyTensor1.copy_((vyTensor1 + fyTensor)*0.5)
         
         # velocity to postion
         xTensor1.add_(vxTensor1.long())
@@ -226,7 +227,7 @@ class ParticleLife():
 
 def main():
     running = True
-    particleLife = ParticleLife(4096, [1, 1, 1, 1])
+    particleLife = ParticleLife(k_particlesPerCreature, [1, 1, 1, 1])
     timeList = []
     while running:
         start = time.time()
