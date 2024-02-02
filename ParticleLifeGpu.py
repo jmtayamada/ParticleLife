@@ -20,8 +20,8 @@ grey = (122, 122, 122)
 
 # init pygame
 pygame.init()
-width = 700
-height = 500
+width = 800
+height = 800
 screen = pygame.display.set_mode((width + 1, height + 1))
 pygame.display.set_caption("Particle Life")
 screen.fill(black)
@@ -180,8 +180,8 @@ class ParticleLife():
         yTensor1.add_(vyTensor1.long())
         
         # make sure particles stay on screen
-        xTensor1.clamp_(0, 700)
-        yTensor1.clamp_(0, 500)
+        xTensor1.clamp_(0, width)
+        yTensor1.clamp_(0, height)
         
         # reverse velocity if object is outside of the bounds
         vxTensor1.multiply_(torch.where(xTensor1 == width, -1.0, 1.0))
