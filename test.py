@@ -104,7 +104,7 @@ class ParticleLife():
         forceTensor = torch.zeros((2, PositionTensor1.size(dim=1)), device=device)
         
         # calculate distance along x, y, and xy directions
-        disXY = torch.abs(PositionTensor1.sub(PositionTensor2))
+        disXY = PositionTensor1.sub(PositionTensor2)
         dis = (torch.sum(disXY**2, dim=0))**.5
         
         # calculate forces
