@@ -96,10 +96,10 @@ class ParticleLife():
     def syncCpuTensors(self):
         if device == "cpu":
             return
-        self.PositionRed.copy_(self.PositionRedGpu)
-        self.PositionBlue.copy_(self.PositionBlueGpu)
-        self.PositionGreen.copy_(self.PositionGreenGpu)
-        self.PositionYellow.copy_(self.PositionYellowGpu)
+        self.PositionRed.copy_(self.PositionRedGpu, True)
+        self.PositionBlue.copy_(self.PositionBlueGpu, True)
+        self.PositionGreen.copy_(self.PositionGreenGpu, True)
+        self.PositionYellow.copy_(self.PositionYellowGpu, True)
 
     def calculateForces(self, tensor1: Tensor, forceStoredTensor: Tensor, tensor2: Tensor, rule: float):
         # create a tensor from tensor1 repeated for each value in tensor2 to allow all calculations to be done at once
@@ -187,6 +187,7 @@ class ParticleLife():
         
     # main loop for a particle sim
     def update(self):
+        #.022
         self.calculateForces(self.PositionRedGpu, self.ForceRedStored, self.PositionRedGpu, self.RedRed)
         self.calculateForces(self.PositionRedGpu, self.ForceRedStored, self.PositionBlueGpu, self.RedBlue)
         self.calculateForces(self.PositionRedGpu, self.ForceRedStored, self.PositionGreenGpu, self.RedGreen)
@@ -203,11 +204,11 @@ class ParticleLife():
         self.calculateForces(self.PositionYellowGpu, self.ForceYellowStored, self.PositionBlueGpu, self.YellowBlue)
         self.calculateForces(self.PositionYellowGpu, self.ForceYellowStored, self.PositionGreenGpu, self.YellowGreen)
         self.calculateForces(self.PositionYellowGpu, self.ForceYellowStored, self.PositionYellowGpu, self.YellowYellow)
-
+        # .0065
         self.updatePosition()
-
+        # .009
         self.syncCpuTensors()
-
+        # .0037
         self.draw()
 
 def main():
